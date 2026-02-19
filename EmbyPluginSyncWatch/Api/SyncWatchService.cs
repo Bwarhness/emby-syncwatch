@@ -76,9 +76,13 @@ namespace EmbyPluginSyncWatch.Api
 
         private (string sessionId, string userId) GetSessionInfo()
         {
+            Plugin.Logger?.Debug("[SyncWatch] GetSessionInfo called");
+            
             var authInfo = _authContext.GetAuthorizationInfo(Request);
+            Plugin.Logger?.Debug($"[SyncWatch] AuthInfo: DeviceId={authInfo?.DeviceId}, UserId={authInfo?.UserId}");
             
             var sessions = _sessionManager.Sessions;
+            Plugin.Logger?.Debug($"[SyncWatch] Found {sessions?.Count() ?? 0} sessions");
             
             // Handle potential type differences between AuthorizationInfo and SessionInfo
             // by converting to strings for comparison
@@ -183,9 +187,11 @@ namespace EmbyPluginSyncWatch.Api
         /// </summary>
         public object Get(GetSyncStatus request)
         {
+            Plugin.Logger?.Debug("[SyncWatch] GetSyncStatus endpoint called");
             try
             {
                 var (sessionId, _) = GetSessionInfo();
+                Plugin.Logger?.Debug($"[SyncWatch] SessionId: {sessionId}");
                 var room = SyncManager.GetRoomForSession(sessionId);
 
                 return new SyncStatusDto
