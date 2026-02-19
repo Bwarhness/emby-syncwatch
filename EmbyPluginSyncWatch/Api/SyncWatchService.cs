@@ -187,11 +187,16 @@ namespace EmbyPluginSyncWatch.Api
         /// </summary>
         public object Get(GetSyncStatus request)
         {
-            Plugin.Logger?.Debug("[SyncWatch] GetSyncStatus endpoint called");
+            try
+            {
+                Plugin.Logger?.Info("[SyncWatch] GetSyncStatus endpoint called - start");
+            }
+            catch { }
+            
             try
             {
                 var (sessionId, _) = GetSessionInfo();
-                Plugin.Logger?.Debug($"[SyncWatch] SessionId: {sessionId}");
+                Plugin.Logger?.Info($"[SyncWatch] SessionId: {sessionId}");
                 var room = SyncManager.GetRoomForSession(sessionId);
 
                 return new SyncStatusDto
