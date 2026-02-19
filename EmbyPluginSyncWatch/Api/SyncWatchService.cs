@@ -120,11 +120,26 @@ namespace EmbyPluginSyncWatch.Api
         }
 
         /// <summary>
-        /// GET /SyncWatch/Ping - Simple test endpoint
+        /// GET /SyncWatch/Ping - Simple test endpoint with diagnostics
         /// </summary>
         public object Get(GetPing request)
         {
-            return "pong";
+            var diag = new System.Text.StringBuilder();
+            diag.AppendLine("SyncWatch Diagnostics:");
+            diag.AppendLine($"- SessionManager: {(SessionManager != null ? "OK" : "NULL")}");
+            diag.AppendLine($"- AuthContext: {(AuthContext != null ? "OK" : "NULL")}");
+            diag.AppendLine($"- SyncManager: {(SyncWatchEntryPoint.SyncManager != null ? "OK" : "NULL")}");
+            diag.AppendLine($"- Request: {(Request != null ? "OK" : "NULL")}");
+            try
+            {
+                var authInfo = AuthContext?.GetAuthorizationInfo(Request);
+                diag.AppendLine($"- AuthInfo: {(authInfo != null ? $"DeviceId={authInfo.DeviceId}, UserId={authInfo.UserId}" : "NULL")}");
+            }
+            catch (Exception ex)
+            {
+                diag.AppendLine($"- AuthInfo ERROR: {ex.Message}");
+            }
+            return diag.ToString();
         }
 
         /// <summary>
