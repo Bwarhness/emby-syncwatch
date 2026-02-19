@@ -61,7 +61,18 @@ namespace EmbyPluginSyncWatch.Api
             _authContext = authContext;
         }
 
-        private SyncPlayManager SyncManager => SyncWatchEntryPoint.SyncManager;
+        private SyncPlayManager SyncManager 
+        {
+            get
+            {
+                var manager = SyncWatchEntryPoint.SyncManager;
+                if (manager == null)
+                {
+                    throw new InvalidOperationException("SyncWatch plugin is still initializing. Please try again in a moment.");
+                }
+                return manager;
+            }
+        }
 
         private (string sessionId, string userId) GetSessionInfo()
         {
@@ -172,14 +183,22 @@ namespace EmbyPluginSyncWatch.Api
         /// </summary>
         public object Get(GetSyncStatus request)
         {
-            var (sessionId, _) = GetSessionInfo();
-            var room = SyncManager.GetRoomForSession(sessionId);
-
-            return new SyncStatusDto
+            try
             {
-                InRoom = room != null,
-                Room = room != null ? MapRoomToDto(room, sessionId, GetServerUrl()) : null
-            };
+                var (sessionId, _) = GetSessionInfo();
+                var room = SyncManager.GetRoomForSession(sessionId);
+
+                return new SyncStatusDto
+                {
+                    InRoom = room != null,
+                    Room = room != null ? MapRoomToDto(room, sessionId, GetServerUrl()) : null
+                };
+            }
+            catch (Exception ex)
+            {
+                Plugin.Logger?.Error($"[SyncWatch] Error in GetSyncStatus: {ex}");
+                throw;
+            }
         }
 
         private RoomDto MapRoomToDto(SyncRoom room, string sessionId, string serverUrl)

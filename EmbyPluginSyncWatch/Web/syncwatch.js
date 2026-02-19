@@ -19,7 +19,18 @@
     // ========================================
 
     function getHeaders() {
-        const token = window.ApiClient ? ApiClient.accessToken() : null;
+        let token = null;
+        if (window.ApiClient) {
+            // Try different methods to get the token
+            if (typeof ApiClient.accessToken === 'function') {
+                token = ApiClient.accessToken();
+            } else if (ApiClient._serverInfo && ApiClient._serverInfo.AccessToken) {
+                token = ApiClient._serverInfo.AccessToken;
+            } else if (ApiClient.serverInfo && ApiClient.serverInfo().AccessToken) {
+                token = ApiClient.serverInfo().AccessToken;
+            }
+        }
+        console.log('[SyncWatch] Token:', token ? 'found' : 'not found');
         return {
             'X-Emby-Token': token,
             'Content-Type': 'application/json'
