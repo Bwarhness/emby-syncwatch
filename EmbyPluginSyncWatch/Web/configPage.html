@@ -68,19 +68,30 @@
                                 <span>Auto-inject UI script</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">
-                                Automatically inject the SyncWatch floating button into the web client
+                                Automatically inject the SyncWatch floating button into the Emby web client.
+                                This modifies index.html in the dashboard-ui folder on server startup.
+                                <strong>Requires server restart to take effect.</strong>
                             </div>
                         </div>
+                        
+                        <div id="injectionStatus" class="fieldDescription" style="margin-top: 10px; padding: 8px; border-radius: 4px;"></div>
                     </div>
 
                     <div class="verticalSection">
-                        <h3 class="sectionTitle">Manual Installation</h3>
+                        <h3 class="sectionTitle">Manual Installation (Fallback)</h3>
                         <p>
-                            To manually add SyncWatch to your web client, add this script tag to your
-                            custom CSS/JS settings or index.html:
+                            If auto-injection doesn't work (e.g., permission issues), you can manually add SyncWatch:
                         </p>
-                        <pre style="background: #333; padding: 10px; border-radius: 4px; overflow-x: auto;">
-&lt;script src="/emby/web/configurationpages?name=syncwatch.js"&gt;&lt;/script&gt;</pre>
+                        <div style="margin-top: 10px;">
+                            <strong>Option 1: Emby Premiere Custom JS</strong>
+                            <p style="margin: 5px 0;">Dashboard → Settings → Advanced → Custom JavaScript:</p>
+                            <pre style="background: #2a2a2a; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px;">var s=document.createElement('script');s.src='/emby/web/configurationpages?name=syncwatch.js';document.head.appendChild(s);</pre>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <strong>Option 2: Edit index.html</strong>
+                            <p style="margin: 5px 0;">Add this line before &lt;/head&gt; in dashboard-ui/index.html:</p>
+                            <pre style="background: #2a2a2a; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px;">&lt;script src="/emby/web/configurationpages?name=syncwatch.js"&gt;&lt;/script&gt;</pre>
+                        </div>
                     </div>
 
                     <div>

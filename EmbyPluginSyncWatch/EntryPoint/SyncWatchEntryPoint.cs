@@ -1,3 +1,4 @@
+using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
@@ -14,8 +15,10 @@ namespace EmbyPluginSyncWatch.EntryPoint
     public class SyncWatchEntryPoint : IServerEntryPoint
     {
         private readonly ISessionManager _sessionManager;
+        private readonly IApplicationPaths _appPaths;
         private readonly ILogger _logger;
         private Timer _cleanupTimer;
+        private ScriptInjector _scriptInjector;
 
         /// <summary>
         /// Singleton instance of the sync manager, accessible for API service
@@ -24,17 +27,40 @@ namespace EmbyPluginSyncWatch.EntryPoint
 
         public SyncWatchEntryPoint(
             ISessionManager sessionManager,
+            IApplicationPaths appPaths,
             ILogManager logManager)
         {
             _sessionManager = sessionManager;
+            _appPaths = appPaths;
             _logger = logManager.GetLogger("SyncWatch");
             Plugin.Logger = _logger; // Set static logger for services
             SyncManager = new SyncPlayManager(sessionManager, _logger);
+            _scriptInjector = new ScriptInjector(appPaths, _logger);
         }
 
         public void Run()
         {
             _logger.Info("[SyncWatch] Plugin starting...");
+
+            // Auto-inject script if enabled
+            var config = Plugin.Instance?.Configuration ?? new PluginConfiguration();
+            if (config.AutoInjectScript)
+            {
+                _logger.Info("[SyncWatch] Auto-inject is enabled, attempting script injection...");
+                if (_scriptInjector.InjectScript())
+                {
+                    _logger.Info("[SyncWatch] Script injection completed");
+                }
+                else
+                {
+                    _logger.Warn("[SyncWatch] Script injection failed - manual installation may be required");
+                    _logger.Info("[SyncWatch] See plugin config page for manual installation instructions");
+                }
+            }
+            else
+            {
+                _logger.Info("[SyncWatch] Auto-inject is disabled, skipping script injection");
+            }
 
             // Subscribe to playback events
             _sessionManager.PlaybackStart += OnPlaybackStart;
@@ -43,7 +69,6 @@ namespace EmbyPluginSyncWatch.EntryPoint
             _sessionManager.SessionEnded += OnSessionEnded;
 
             // Start cleanup timer (every 5 minutes)
-            var config = Plugin.Instance?.Configuration ?? new PluginConfiguration();
             _cleanupTimer = new Timer(
                 _ => SyncManager.CleanupStaleRooms(config.RoomTimeoutMinutes),
                 null,
