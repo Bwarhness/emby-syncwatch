@@ -172,8 +172,9 @@ namespace EmbyPluginSyncWatch.Manager
             if (room == null) return;
 
             // Get item ID from session's now playing item
-            var itemId = session.NowPlayingItem?.InternalId ?? 0;
-            if (itemId == 0) return;
+            var itemIdStr = session.NowPlayingItem?.Id;
+            if (string.IsNullOrEmpty(itemIdStr) || !long.TryParse(itemIdStr, out var itemId) || itemId == 0)
+                return;
 
             _logger.Debug($"[SyncWatch] PlaybackStart from {session.Id} in room {room.Id}: Item={itemId}");
 
