@@ -87,8 +87,8 @@ namespace EmbyPluginSyncWatch.Api
                 throw new Exception("AuthContext.GetAuthorizationInfo returned null");
             }
             
-            var authDeviceId = authInfo.DeviceId?.ToString() ?? "";
-            var authUserId = authInfo.UserId?.ToString() ?? "";
+            var authDeviceId = authInfo.DeviceId.ToString();
+            var authUserId = authInfo.UserId.ToString();
             
             // Step 2: Get sessions
             var sessions = SessionManager.Sessions;
