@@ -87,17 +87,19 @@ namespace EmbyPluginSyncWatch.Api
                 throw new Exception("AuthContext.GetAuthorizationInfo returned null");
             }
             
-            var authDeviceId = authInfo.DeviceId.ToString();
+            // authInfo.DeviceId is the string device UUID, not InternalDeviceId
+            var authDeviceId = authInfo.DeviceId;
             var authUserId = authInfo.UserId.ToString();
             
-            // Step 2: Get sessions
+            // Step 2: Get sessions and find the matching one
             var sessions = SessionManager.Sessions;
             if (sessions == null)
             {
                 return (authDeviceId, authUserId);
             }
             
-            // Step 3: Find matching session (simplified)
+            // Step 3: Find matching session by DeviceId (string UUID)
+            // Return the Session.Id which is what playback events use
             string sessionId = authDeviceId;
             try
             {
@@ -105,7 +107,8 @@ namespace EmbyPluginSyncWatch.Api
                 {
                     if (s?.DeviceId == authDeviceId)
                     {
-                        sessionId = s.Id ?? authDeviceId;
+                        // Use the actual Emby Session ID, not the device ID
+                        sessionId = s.Id;
                         break;
                     }
                 }
