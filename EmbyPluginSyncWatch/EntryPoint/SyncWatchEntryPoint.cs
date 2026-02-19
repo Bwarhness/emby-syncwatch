@@ -28,6 +28,7 @@ namespace EmbyPluginSyncWatch.EntryPoint
         {
             _sessionManager = sessionManager;
             _logger = logManager.GetLogger("SyncWatch");
+            Plugin.Logger = _logger; // Set static logger for services
             SyncManager = new SyncPlayManager(sessionManager, _logger);
         }
 

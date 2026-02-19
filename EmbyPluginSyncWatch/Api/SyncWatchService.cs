@@ -67,7 +67,6 @@ namespace EmbyPluginSyncWatch.Api
         {
             var authInfo = _authContext.GetAuthorizationInfo(Request);
             
-            // Find session by device ID or user ID
             var sessions = _sessionManager.Sessions;
             
             // Handle potential type differences between AuthorizationInfo and SessionInfo
@@ -75,9 +74,22 @@ namespace EmbyPluginSyncWatch.Api
             var authDeviceId = Convert.ToString(authInfo.DeviceId);
             var authUserId = Convert.ToString(authInfo.UserId);
             
+            // First, try to find exact match by DeviceId (most precise)
             var session = sessions.FirstOrDefault(s => 
-                s.DeviceId == authDeviceId || 
-                s.UserId.ToString() == authUserId);
+                !string.IsNullOrEmpty(authDeviceId) && s.DeviceId == authDeviceId);
+            
+            // Fall back to UserId match only if DeviceId didn't match
+            if (session == null && !string.IsNullOrEmpty(authUserId))
+            {
+                var userSessions = sessions.Where(s => s.UserId.ToString() == authUserId).ToList();
+                if (userSessions.Count > 1)
+                {
+                    // Log warning: multiple sessions for same user, picking first one
+                    // This could match the wrong device if user has multiple active sessions
+                    Plugin.Logger?.Warn($"[SyncWatch] Multiple sessions ({userSessions.Count}) found for user {authUserId} without DeviceId match. Session matching may be imprecise.");
+                }
+                session = userSessions.FirstOrDefault();
+            }
             
             return (session?.Id ?? authDeviceId ?? "", authUserId ?? "");
         }

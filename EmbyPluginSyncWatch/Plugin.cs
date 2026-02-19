@@ -1,6 +1,7 @@
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Controller.Plugins;
+using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using System;
@@ -20,6 +21,11 @@ namespace EmbyPluginSyncWatch
         public override string Description => "Watch together with friends - synchronized playback across browser clients";
 
         public static Plugin Instance { get; private set; }
+        
+        /// <summary>
+        /// Static logger instance for use by services without direct DI access
+        /// </summary>
+        public static ILogger Logger { get; set; }
 
         public Plugin(IApplicationPaths appPaths, IXmlSerializer xmlSerializer) 
             : base(appPaths, xmlSerializer)
