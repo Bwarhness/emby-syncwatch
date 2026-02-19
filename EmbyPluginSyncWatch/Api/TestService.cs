@@ -7,8 +7,9 @@ namespace EmbyPluginSyncWatch.Api
     public class GetTest : IReturn<string> { }
 
     /// <summary>
-    /// Minimal test service with IRequiresRequest
+    /// Minimal test service with IRequiresRequest and Authenticated
     /// </summary>
+    [Authenticated]
     public class TestService : IService, IRequiresRequest
     {
         public IRequest Request { get; set; }
