@@ -67,15 +67,19 @@ namespace EmbyPluginSyncWatch.Api
         {
             var authInfo = _authContext.GetAuthorizationInfo(Request);
             
-            // Find session by device ID or access token
+            // Find session by device ID or user ID
             var sessions = _sessionManager.Sessions;
-            var authDeviceId = authInfo.DeviceId;
-            var authUserId = authInfo.UserId;
+            
+            // Handle potential type differences between AuthorizationInfo and SessionInfo
+            // by converting to strings for comparison
+            var authDeviceId = Convert.ToString(authInfo.DeviceId);
+            var authUserId = Convert.ToString(authInfo.UserId);
+            
             var session = sessions.FirstOrDefault(s => 
-                string.Equals(s.DeviceId, authDeviceId, StringComparison.OrdinalIgnoreCase) || 
+                s.DeviceId == authDeviceId || 
                 s.UserId.ToString() == authUserId);
             
-            return (session?.Id ?? authDeviceId, authUserId);
+            return (session?.Id ?? authDeviceId ?? "", authUserId ?? "");
         }
 
         private string GetServerUrl()
