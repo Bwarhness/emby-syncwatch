@@ -69,10 +69,10 @@ namespace EmbyPluginSyncWatch.Api
             
             // Find session by device ID or access token
             var sessions = _sessionManager.Sessions;
-            var authDeviceId = authInfo.DeviceId?.ToString();
-            var authUserId = authInfo.UserId?.ToString();
+            var authDeviceId = authInfo.DeviceId;
+            var authUserId = authInfo.UserId;
             var session = sessions.FirstOrDefault(s => 
-                string.Equals(s.DeviceId?.ToString(), authDeviceId, StringComparison.OrdinalIgnoreCase) || 
+                string.Equals(s.DeviceId, authDeviceId, StringComparison.OrdinalIgnoreCase) || 
                 s.UserId.ToString() == authUserId);
             
             return (session?.Id ?? authDeviceId, authUserId);
