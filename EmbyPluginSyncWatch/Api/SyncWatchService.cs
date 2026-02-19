@@ -46,6 +46,9 @@ namespace EmbyPluginSyncWatch.Api
     [Unauthenticated]
     public class GetPing : IReturn<string> { }
 
+    [Route("/SyncWatch/Test2", "GET", Summary = "Simple test inside main service")]
+    public class GetTest2 : IReturn<string> { }
+
     #endregion
 
     /// <summary>
@@ -60,6 +63,14 @@ namespace EmbyPluginSyncWatch.Api
         public SyncWatchService()
         {
             Plugin.Logger?.Info("[SyncWatch] SyncWatchService constructor called");
+        }
+
+        /// <summary>
+        /// GET /SyncWatch/Test2 - Minimal test with no dependencies
+        /// </summary>
+        public object Get(GetTest2 request)
+        {
+            return "Test2 OK - Inside main service!";
         }
         
         private ISessionManager SessionManager => SyncWatchEntryPoint.SessionManager;
