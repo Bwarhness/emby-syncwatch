@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SyncWatch</title>
+</head>
+<body>
+    <div id="SyncWatchConfigPage" data-role="page" class="page type-interior pluginConfigurationPage">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="SyncWatchConfigForm">
+                    <div class="sectionTitleContainer">
+                        <h2 class="sectionTitle">SyncWatch Settings</h2>
+                    </div>
+
+                    <div class="verticalSection">
+                        <p>
+                            SyncWatch enables synchronized playback across multiple browser clients.
+                            Create a room, share the link, and watch together!
+                        </p>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3 class="sectionTitle">Sync Settings</h3>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel" for="MaxDriftSeconds">Max Drift (seconds)</label>
+                            <input type="number" id="MaxDriftSeconds" min="1" max="30" />
+                            <div class="fieldDescription">
+                                Maximum allowed position difference before forcing a resync (default: 3)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3 class="sectionTitle">Room Settings</h3>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel" for="MaxRooms">Maximum Rooms</label>
+                            <input type="number" id="MaxRooms" min="1" max="1000" />
+                            <div class="fieldDescription">
+                                Maximum number of rooms allowed on the server (default: 50)
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel" for="MaxMembersPerRoom">Max Members per Room</label>
+                            <input type="number" id="MaxMembersPerRoom" min="2" max="100" />
+                            <div class="fieldDescription">
+                                Maximum number of members allowed in a single room (default: 20)
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel" for="RoomTimeoutMinutes">Room Timeout (minutes)</label>
+                            <input type="number" id="RoomTimeoutMinutes" min="5" max="1440" />
+                            <div class="fieldDescription">
+                                Empty rooms will be automatically deleted after this time (default: 60)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3 class="sectionTitle">UI Settings</h3>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label>
+                                <input type="checkbox" id="AutoInjectScript" />
+                                <span>Auto-inject UI script</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Automatically inject the SyncWatch floating button into the web client
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3 class="sectionTitle">Manual Installation</h3>
+                        <p>
+                            To manually add SyncWatch to your web client, add this script tag to your
+                            custom CSS/JS settings or index.html:
+                        </p>
+                        <pre style="background: #333; padding: 10px; border-radius: 4px; overflow-x: auto;">
+&lt;script src="/emby/web/configurationpages?name=syncwatch.js"&gt;&lt;/script&gt;</pre>
+                    </div>
+
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var SyncWatchConfig = {
+                pluginId: 'f8e12a3b-c456-7890-def1-234567890abc',
+
+                loadConfig: function() {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(this.pluginId).then(function(config) {
+                        document.getElementById('MaxDriftSeconds').value = config.MaxDriftSeconds || 3;
+                        document.getElementById('MaxRooms').value = config.MaxRooms || 50;
+                        document.getElementById('MaxMembersPerRoom').value = config.MaxMembersPerRoom || 20;
+                        document.getElementById('RoomTimeoutMinutes').value = config.RoomTimeoutMinutes || 60;
+                        document.getElementById('AutoInjectScript').checked = config.AutoInjectScript !== false;
+                        Dashboard.hideLoadingMsg();
+                    });
+                },
+
+                saveConfig: function() {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(this.pluginId).then(function(config) {
+                        config.MaxDriftSeconds = parseInt(document.getElementById('MaxDriftSeconds').value) || 3;
+                        config.MaxRooms = parseInt(document.getElementById('MaxRooms').value) || 50;
+                        config.MaxMembersPerRoom = parseInt(document.getElementById('MaxMembersPerRoom').value) || 20;
+                        config.RoomTimeoutMinutes = parseInt(document.getElementById('RoomTimeoutMinutes').value) || 60;
+                        config.AutoInjectScript = document.getElementById('AutoInjectScript').checked;
+
+                        ApiClient.updatePluginConfiguration(SyncWatchConfig.pluginId, config).then(function() {
+                            Dashboard.processPluginConfigurationUpdateResult();
+                        });
+                    });
+                }
+            };
+
+            document.getElementById('SyncWatchConfigForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                SyncWatchConfig.saveConfig();
+                return false;
+            });
+
+            SyncWatchConfig.loadConfig();
+        </script>
+    </div>
+</body>
+</html>
