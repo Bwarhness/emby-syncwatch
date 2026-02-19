@@ -43,6 +43,7 @@ namespace EmbyPluginSyncWatch.Api
     public class GetSyncStatus : IReturn<SyncStatusDto> { }
 
     [Route("/SyncWatch/Ping", "GET", Summary = "Simple ping test")]
+    [Unauthenticated]
     public class GetPing : IReturn<string> { }
 
     #endregion
