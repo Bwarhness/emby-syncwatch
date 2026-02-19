@@ -80,37 +80,42 @@ namespace EmbyPluginSyncWatch.Api
 
         private (string sessionId, string userId) GetSessionInfo()
         {
-            Plugin.Logger?.Debug("[SyncWatch] GetSessionInfo called");
-            
+            // Step 1: Get auth info
             var authInfo = AuthContext.GetAuthorizationInfo(Request);
-            Plugin.Logger?.Debug($"[SyncWatch] AuthInfo: DeviceId={authInfo?.DeviceId}, UserId={authInfo?.UserId}");
-            
-            var sessions = SessionManager.Sessions;
-            Plugin.Logger?.Debug($"[SyncWatch] Found {sessions?.Count() ?? 0} sessions");
-            
-            // Handle potential type differences between AuthorizationInfo and SessionInfo
-            // by converting to strings for comparison
-            var authDeviceId = Convert.ToString(authInfo.DeviceId);
-            var authUserId = Convert.ToString(authInfo.UserId);
-            
-            // First, try to find exact match by DeviceId (most precise)
-            var session = sessions.FirstOrDefault(s => 
-                !string.IsNullOrEmpty(authDeviceId) && s.DeviceId == authDeviceId);
-            
-            // Fall back to UserId match only if DeviceId didn't match
-            if (session == null && !string.IsNullOrEmpty(authUserId))
+            if (authInfo == null)
             {
-                var userSessions = sessions.Where(s => s.UserId.ToString() == authUserId).ToList();
-                if (userSessions.Count > 1)
-                {
-                    // Log warning: multiple sessions for same user, picking first one
-                    // This could match the wrong device if user has multiple active sessions
-                    Plugin.Logger?.Warn($"[SyncWatch] Multiple sessions ({userSessions.Count}) found for user {authUserId} without DeviceId match. Session matching may be imprecise.");
-                }
-                session = userSessions.FirstOrDefault();
+                throw new Exception("AuthContext.GetAuthorizationInfo returned null");
             }
             
-            return (session?.Id ?? authDeviceId ?? "", authUserId ?? "");
+            var authDeviceId = authInfo.DeviceId?.ToString() ?? "";
+            var authUserId = authInfo.UserId?.ToString() ?? "";
+            
+            // Step 2: Get sessions
+            var sessions = SessionManager.Sessions;
+            if (sessions == null)
+            {
+                return (authDeviceId, authUserId);
+            }
+            
+            // Step 3: Find matching session (simplified)
+            string sessionId = authDeviceId;
+            try
+            {
+                foreach (var s in sessions)
+                {
+                    if (s?.DeviceId == authDeviceId)
+                    {
+                        sessionId = s.Id ?? authDeviceId;
+                        break;
+                    }
+                }
+            }
+            catch
+            {
+                // If session enumeration fails, just use device ID
+            }
+            
+            return (sessionId, authUserId);
         }
 
         private string GetServerUrl()
