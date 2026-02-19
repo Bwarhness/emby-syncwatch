@@ -163,18 +163,22 @@ namespace EmbyPluginSyncWatch.Manager
         /// <summary>
         /// Handles playback start events
         /// </summary>
-        public void HandlePlaybackStart(SessionInfo session, PlaybackProgressInfo info)
+        public void HandlePlaybackStart(SessionInfo session, PlaybackProgressEventArgs e)
         {
             if (_isProcessingRemoteCommand) return;
-            if (info == null) return;
+            if (e == null) return;
 
             var room = GetRoomForSession(session.Id);
             if (room == null) return;
 
-            _logger.Debug($"[SyncWatch] PlaybackStart from {session.Id} in room {room.Id}: Item={info.ItemId}");
+            // Get item ID from session's now playing item
+            var itemId = session.NowPlayingItem?.InternalId ?? 0;
+            if (itemId == 0) return;
 
-            room.CurrentItemId = info.ItemId;
-            room.PositionTicks = info.PositionTicks ?? 0;
+            _logger.Debug($"[SyncWatch] PlaybackStart from {session.Id} in room {room.Id}: Item={itemId}");
+
+            room.CurrentItemId = itemId;
+            room.PositionTicks = e.PlaybackPositionTicks ?? 0;
             room.State = SyncState.Playing;
             room.LastUpdate = DateTime.UtcNow;
 
@@ -185,16 +189,16 @@ namespace EmbyPluginSyncWatch.Manager
         /// <summary>
         /// Handles playback progress events
         /// </summary>
-        public void HandlePlaybackProgress(SessionInfo session, PlaybackProgressInfo info)
+        public void HandlePlaybackProgress(SessionInfo session, PlaybackProgressEventArgs e)
         {
             if (_isProcessingRemoteCommand) return;
-            if (info == null) return;
+            if (e == null) return;
 
             var room = GetRoomForSession(session.Id);
             if (room == null) return;
 
-            var isPaused = info.IsPaused;
-            var newPosition = info.PositionTicks ?? room.PositionTicks;
+            var isPaused = e.IsPaused;
+            var newPosition = e.PlaybackPositionTicks ?? room.PositionTicks;
 
             // Detect pause
             if (isPaused && room.State == SyncState.Playing)
@@ -250,7 +254,7 @@ namespace EmbyPluginSyncWatch.Manager
 
         private async Task BroadcastPlayToItemAsync(SyncRoom room, string excludeSessionId)
         {
-            if (string.IsNullOrEmpty(room.CurrentItemId)) return;
+            if (room.CurrentItemId == 0) return;
 
             _isProcessingRemoteCommand = true;
             try
@@ -266,7 +270,7 @@ namespace EmbyPluginSyncWatch.Manager
                             sessionId,
                             new PlayRequest
                             {
-                                ItemIds = new[] { room.CurrentItemId },
+                                ItemIds = new long[] { room.CurrentItemId },
                                 StartPositionTicks = room.PositionTicks,
                                 PlayCommand = PlayCommand.PlayNow
                             },
@@ -348,7 +352,7 @@ namespace EmbyPluginSyncWatch.Manager
 
         private async Task SyncSessionToRoomAsync(string sessionId, SyncRoom room)
         {
-            if (room.State == SyncState.Idle || string.IsNullOrEmpty(room.CurrentItemId))
+            if (room.State == SyncState.Idle || room.CurrentItemId == 0)
                 return;
 
             _isProcessingRemoteCommand = true;
@@ -360,7 +364,7 @@ namespace EmbyPluginSyncWatch.Manager
                     sessionId,
                     new PlayRequest
                     {
-                        ItemIds = new[] { room.CurrentItemId },
+                        ItemIds = new long[] { room.CurrentItemId },
                         StartPositionTicks = room.EstimatedPositionTicks,
                         PlayCommand = PlayCommand.PlayNow
                     },

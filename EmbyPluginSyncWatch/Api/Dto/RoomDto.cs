@@ -21,7 +21,7 @@ namespace EmbyPluginSyncWatch.Api.Dto
         public string State { get; set; }
 
         /// <summary>Currently playing item ID</summary>
-        public string CurrentItemId { get; set; }
+        public long CurrentItemId { get; set; }
 
         /// <summary>Current playback position in ticks</summary>
         public long PositionTicks { get; set; }

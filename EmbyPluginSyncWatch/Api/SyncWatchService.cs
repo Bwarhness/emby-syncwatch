@@ -106,7 +106,7 @@ namespace EmbyPluginSyncWatch.Api
 
             if (room == null)
             {
-                throw new ResourceNotFoundException($"Room '{request.RoomId}' not found");
+                throw new Exception($"Room '{request.RoomId}' not found");
             }
 
             return MapRoomToDto(room, sessionId, GetServerUrl());
@@ -133,7 +133,7 @@ namespace EmbyPluginSyncWatch.Api
 
             if (room == null)
             {
-                throw new ResourceNotFoundException($"Room '{request.RoomId}' not found");
+                throw new Exception($"Room '{request.RoomId}' not found");
             }
 
             return MapRoomToDto(room, sessionId, GetServerUrl());

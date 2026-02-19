@@ -59,7 +59,7 @@ namespace EmbyPluginSyncWatch.EntryPoint
 
             try
             {
-                SyncManager.HandlePlaybackStart(e.Session, e.PlaybackInfo);
+                SyncManager.HandlePlaybackStart(e.Session, e);
             }
             catch (Exception ex)
             {
@@ -73,7 +73,7 @@ namespace EmbyPluginSyncWatch.EntryPoint
 
             try
             {
-                SyncManager.HandlePlaybackProgress(e.Session, e.PlaybackInfo);
+                SyncManager.HandlePlaybackProgress(e.Session, e);
             }
             catch (Exception ex)
             {
