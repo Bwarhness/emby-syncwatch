@@ -216,26 +216,46 @@ namespace EmbyPluginSyncWatch.Api
         {
             try
             {
-                Plugin.Logger?.Info("[SyncWatch] GetSyncStatus endpoint called - start");
-            }
-            catch { }
-            
-            try
-            {
-                var (sessionId, _) = GetSessionInfo();
-                Plugin.Logger?.Info($"[SyncWatch] SessionId: {sessionId}");
-                var room = SyncManager.GetRoomForSession(sessionId);
-
-                return new SyncStatusDto
+                // Step 1: Get session info
+                string sessionId;
+                try
                 {
-                    InRoom = room != null,
-                    Room = room != null ? MapRoomToDto(room, sessionId, GetServerUrl()) : null
-                };
+                    var info = GetSessionInfo();
+                    sessionId = info.sessionId;
+                }
+                catch (Exception ex)
+                {
+                    return new { error = $"GetSessionInfo failed: {ex.Message}" };
+                }
+
+                // Step 2: Get room
+                SyncRoom room;
+                try
+                {
+                    room = SyncManager.GetRoomForSession(sessionId);
+                }
+                catch (Exception ex)
+                {
+                    return new { error = $"GetRoomForSession failed: {ex.Message}" };
+                }
+
+                // Step 3: Build response
+                try
+                {
+                    return new SyncStatusDto
+                    {
+                        InRoom = room != null,
+                        Room = room != null ? MapRoomToDto(room, sessionId, GetServerUrl()) : null
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new { error = $"Building response failed: {ex.Message}" };
+                }
             }
             catch (Exception ex)
             {
-                Plugin.Logger?.Error($"[SyncWatch] Error in GetSyncStatus: {ex}");
-                throw;
+                return new { error = $"Unexpected error: {ex.Message}", stack = ex.StackTrace };
             }
         }
 
