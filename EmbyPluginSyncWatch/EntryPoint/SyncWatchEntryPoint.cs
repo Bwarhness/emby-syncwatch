@@ -1,5 +1,6 @@
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.Net;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Logging;
@@ -24,16 +25,29 @@ namespace EmbyPluginSyncWatch.EntryPoint
         /// Singleton instance of the sync manager, accessible for API service
         /// </summary>
         public static SyncPlayManager SyncManager { get; private set; }
+        
+        /// <summary>
+        /// Session manager for API service
+        /// </summary>
+        public static ISessionManager SessionManager { get; private set; }
+        
+        /// <summary>
+        /// Auth context for API service - resolved lazily
+        /// </summary>
+        public static IAuthorizationContext AuthContext { get; set; }
 
         public SyncWatchEntryPoint(
             ISessionManager sessionManager,
             IApplicationPaths appPaths,
-            ILogManager logManager)
+            ILogManager logManager,
+            IAuthorizationContext authContext)
         {
             _sessionManager = sessionManager;
             _appPaths = appPaths;
             _logger = logManager.GetLogger("SyncWatch");
             Plugin.Logger = _logger; // Set static logger for services
+            SessionManager = sessionManager; // Expose for API service
+            AuthContext = authContext; // Expose for API service
             SyncManager = new SyncPlayManager(sessionManager, _logger);
             _scriptInjector = new ScriptInjector(appPaths, _logger);
         }

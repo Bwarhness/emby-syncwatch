@@ -52,14 +52,14 @@ namespace EmbyPluginSyncWatch.Api
     {
         public IRequest Request { get; set; }
 
-        private readonly ISessionManager _sessionManager;
-        private readonly IAuthorizationContext _authContext;
-
-        public SyncWatchService(ISessionManager sessionManager, IAuthorizationContext authContext)
+        // No constructor dependencies - use static/service locator pattern instead
+        public SyncWatchService()
         {
-            _sessionManager = sessionManager;
-            _authContext = authContext;
+            Plugin.Logger?.Info("[SyncWatch] SyncWatchService constructor called");
         }
+        
+        private ISessionManager SessionManager => SyncWatchEntryPoint.SessionManager;
+        private IAuthorizationContext AuthContext => SyncWatchEntryPoint.AuthContext;
 
         private SyncPlayManager SyncManager 
         {
@@ -78,10 +78,10 @@ namespace EmbyPluginSyncWatch.Api
         {
             Plugin.Logger?.Debug("[SyncWatch] GetSessionInfo called");
             
-            var authInfo = _authContext.GetAuthorizationInfo(Request);
+            var authInfo = AuthContext.GetAuthorizationInfo(Request);
             Plugin.Logger?.Debug($"[SyncWatch] AuthInfo: DeviceId={authInfo?.DeviceId}, UserId={authInfo?.UserId}");
             
-            var sessions = _sessionManager.Sessions;
+            var sessions = SessionManager.Sessions;
             Plugin.Logger?.Debug($"[SyncWatch] Found {sessions?.Count() ?? 0} sessions");
             
             // Handle potential type differences between AuthorizationInfo and SessionInfo
