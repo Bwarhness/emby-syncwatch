@@ -184,7 +184,7 @@ namespace EmbyPluginSyncWatch
             }
 
             // Also check for the script tag itself (in case marker was removed)
-            if (contents.Contains("syncwatch.js", StringComparison.OrdinalIgnoreCase))
+            if (contents.IndexOf("syncwatch.js", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 _logger.Info("[SyncWatch] SyncWatch script tag already present");
                 return true;
