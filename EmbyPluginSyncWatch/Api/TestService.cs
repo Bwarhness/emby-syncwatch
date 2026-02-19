@@ -1,3 +1,4 @@
+using MediaBrowser.Controller.Net;
 using MediaBrowser.Model.Services;
 
 namespace EmbyPluginSyncWatch.Api
@@ -6,13 +7,15 @@ namespace EmbyPluginSyncWatch.Api
     public class GetTest : IReturn<string> { }
 
     /// <summary>
-    /// Minimal test service - no dependencies, no auth
+    /// Minimal test service with IRequiresRequest
     /// </summary>
-    public class TestService : IService
+    public class TestService : IService, IRequiresRequest
     {
+        public IRequest Request { get; set; }
+
         public object Get(GetTest request)
         {
-            return "Test OK!";
+            return "Test OK - IRequiresRequest works!";
         }
     }
 }
