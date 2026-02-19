@@ -24,8 +24,8 @@ namespace EmbyPluginSyncWatch.Manager
         // Session to Room mapping: SessionId -> RoomId
         private readonly ConcurrentDictionary<string, string> _sessionToRoom = new ConcurrentDictionary<string, string>();
 
-        // Flag to prevent echo when we send commands
-        private volatile bool _isProcessingRemoteCommand = false;
+        // Flag to prevent echo when we send commands (0 = false, 1 = true)
+        private int _isProcessingRemoteCommand = 0;
 
         // Minimum seek threshold in ticks (2 seconds)
         private static readonly long SeekThresholdTicks = TimeSpan.FromSeconds(2).Ticks;
@@ -165,7 +165,7 @@ namespace EmbyPluginSyncWatch.Manager
         /// </summary>
         public void HandlePlaybackStart(SessionInfo session, PlaybackProgressEventArgs e)
         {
-            if (_isProcessingRemoteCommand) return;
+            if (Interlocked.CompareExchange(ref _isProcessingRemoteCommand, 0, 0) == 1) return;
             if (e == null) return;
 
             var room = GetRoomForSession(session.Id);
@@ -192,7 +192,7 @@ namespace EmbyPluginSyncWatch.Manager
         /// </summary>
         public void HandlePlaybackProgress(SessionInfo session, PlaybackProgressEventArgs e)
         {
-            if (_isProcessingRemoteCommand) return;
+            if (Interlocked.CompareExchange(ref _isProcessingRemoteCommand, 0, 0) == 1) return;
             if (e == null) return;
 
             var room = GetRoomForSession(session.Id);
@@ -257,7 +257,7 @@ namespace EmbyPluginSyncWatch.Manager
         {
             if (room.CurrentItemId == 0) return;
 
-            _isProcessingRemoteCommand = true;
+            Interlocked.Exchange(ref _isProcessingRemoteCommand, 1);
             try
             {
                 foreach (var sessionId in room.MemberSessionIds.ToArray())
@@ -289,7 +289,7 @@ namespace EmbyPluginSyncWatch.Manager
             finally
             {
                 await Task.Delay(200);
-                _isProcessingRemoteCommand = false;
+                Interlocked.Exchange(ref _isProcessingRemoteCommand, 0);
             }
         }
 
@@ -320,7 +320,7 @@ namespace EmbyPluginSyncWatch.Manager
 
         private async Task BroadcastPlaystateCommandAsync(SyncRoom room, string excludeSessionId, PlaystateRequest command)
         {
-            _isProcessingRemoteCommand = true;
+            Interlocked.Exchange(ref _isProcessingRemoteCommand, 1);
             try
             {
                 foreach (var sessionId in room.MemberSessionIds.ToArray())
@@ -347,7 +347,7 @@ namespace EmbyPluginSyncWatch.Manager
             finally
             {
                 await Task.Delay(200);
-                _isProcessingRemoteCommand = false;
+                Interlocked.Exchange(ref _isProcessingRemoteCommand, 0);
             }
         }
 
@@ -356,7 +356,7 @@ namespace EmbyPluginSyncWatch.Manager
             if (room.State == SyncState.Idle || room.CurrentItemId == 0)
                 return;
 
-            _isProcessingRemoteCommand = true;
+            Interlocked.Exchange(ref _isProcessingRemoteCommand, 1);
             try
             {
                 // Send play command with current item and position
@@ -393,7 +393,7 @@ namespace EmbyPluginSyncWatch.Manager
             finally
             {
                 await Task.Delay(200);
-                _isProcessingRemoteCommand = false;
+                Interlocked.Exchange(ref _isProcessingRemoteCommand, 0);
             }
         }
 
