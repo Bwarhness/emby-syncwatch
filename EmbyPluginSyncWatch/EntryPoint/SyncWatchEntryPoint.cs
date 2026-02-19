@@ -97,8 +97,13 @@ namespace EmbyPluginSyncWatch.EntryPoint
         {
             if (e?.Session == null) return;
 
+            _logger.Info($"[SyncWatch] PlaybackStart: Session={e.Session.Id}, Item={e.Session.NowPlayingItem?.Name}");
+            
             try
             {
+                var room = SyncManager.GetRoomForSession(e.Session.Id);
+                _logger.Info($"[SyncWatch] Session {e.Session.Id} is in room: {room?.Name ?? "NONE"}");
+                
                 SyncManager.HandlePlaybackStart(e.Session, e);
             }
             catch (Exception ex)
