@@ -42,6 +42,9 @@ namespace EmbyPluginSyncWatch.Api
     [Route("/SyncWatch/Status", "GET", Summary = "Get current sync status")]
     public class GetSyncStatus : IReturn<SyncStatusDto> { }
 
+    [Route("/SyncWatch/Ping", "GET", Summary = "Simple ping test")]
+    public class GetPing : IReturn<string> { }
+
     #endregion
 
     /// <summary>
@@ -114,6 +117,14 @@ namespace EmbyPluginSyncWatch.Api
             // Build server URL from request
             var scheme = Request.IsSecureConnection ? "https" : "http";
             return $"{scheme}://{Request.Headers["Host"]}";
+        }
+
+        /// <summary>
+        /// GET /SyncWatch/Ping - Simple test endpoint
+        /// </summary>
+        public object Get(GetPing request)
+        {
+            return "pong";
         }
 
         /// <summary>
