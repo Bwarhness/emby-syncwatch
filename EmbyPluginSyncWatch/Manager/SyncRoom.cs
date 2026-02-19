@@ -76,7 +76,8 @@ namespace EmbyPluginSyncWatch.Manager
         /// </summary>
         public string GetJoinLink(string serverUrl)
         {
-            return $"{serverUrl}/web/#/syncwatch/join/{Id}";
+            // Use query-style hash to avoid Emby's router interpreting it as a route
+            return $"{serverUrl}/web/#syncwatch-join={Id}";
         }
     }
 }

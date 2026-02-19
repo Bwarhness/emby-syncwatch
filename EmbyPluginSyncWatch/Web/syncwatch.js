@@ -481,12 +481,25 @@
             }
         },
 
-        async join(roomId) {
+        async join(roomId, retries = 3) {
             try {
                 currentRoom = await joinRoom(roomId);
-                updateUI();
+                // Show the overlay after successful join
+                if (!isOverlayVisible) {
+                    toggleOverlay();
+                } else {
+                    updateUI();
+                }
             } catch (error) {
                 console.error('[SyncWatch] Error joining room:', error);
+                
+                // Retry on auth errors (user might not be fully logged in yet)
+                if (retries > 0 && (error.message.includes('401') || error.message.includes('403'))) {
+                    console.log('[SyncWatch] Auth not ready, retrying in 2s...', retries - 1, 'left');
+                    setTimeout(() => this.join(roomId, retries - 1), 2000);
+                    return;
+                }
+                
                 alert('Failed to join room. It may no longer exist.');
             }
         },
@@ -526,15 +539,29 @@
             updateUI();
         },
 
-        // Auto-join from URL
+        // Auto-join from URL (persists intent through login flow)
         checkJoinLink() {
-            const match = window.location.hash.match(/syncwatch\/join\/([a-f0-9]+)/i);
+            // Check URL for join link
+            let match = window.location.hash.match(/syncwatch-join=([a-f0-9]+)/i);
+            if (!match) {
+                match = window.location.hash.match(/syncwatch\/join\/([a-f0-9]+)/i);
+            }
+            
             if (match) {
                 const roomId = match[1];
-                console.log('[SyncWatch] Join link detected, joining room:', roomId);
-                this.join(roomId);
+                console.log('[SyncWatch] Join link detected in URL, room:', roomId);
+                // Store intent in sessionStorage (survives login redirect)
+                sessionStorage.setItem('syncwatch-join', roomId);
                 // Clean URL
-                history.replaceState(null, '', window.location.pathname);
+                history.replaceState(null, '', window.location.pathname + '#');
+            }
+            
+            // Check sessionStorage for pending join
+            const pendingRoom = sessionStorage.getItem('syncwatch-join');
+            if (pendingRoom) {
+                console.log('[SyncWatch] Pending join from sessionStorage:', pendingRoom);
+                sessionStorage.removeItem('syncwatch-join');
+                this.join(pendingRoom);
             }
         }
     };
