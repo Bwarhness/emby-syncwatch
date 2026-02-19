@@ -87,27 +87,28 @@ namespace EmbyPluginSyncWatch.Api
                 throw new Exception("AuthContext.GetAuthorizationInfo returned null");
             }
             
-            // authInfo.DeviceId is the string device UUID, not InternalDeviceId
-            var authDeviceId = authInfo.DeviceId;
+            // authInfo.DeviceId is InternalDeviceId (long), not the string UUID
+            var internalDeviceId = authInfo.DeviceId;
             var authUserId = authInfo.UserId.ToString();
             
-            // Step 2: Get sessions and find the matching one
+            // Step 2: Get sessions and find the matching one by InternalDeviceId
             var sessions = SessionManager.Sessions;
             if (sessions == null)
             {
-                return (authDeviceId, authUserId);
+                return (internalDeviceId.ToString(), authUserId);
             }
             
-            // Step 3: Find matching session by DeviceId (string UUID)
-            // Return the Session.Id which is what playback events use
-            string sessionId = authDeviceId;
+            // Step 3: Find matching session by InternalDeviceId
+            // Return the Session.Id (the hash-like ID that playback events use)
+            string sessionId = internalDeviceId.ToString();
             try
             {
                 foreach (var s in sessions)
                 {
-                    if (s?.DeviceId == authDeviceId)
+                    // Match by InternalDeviceId property
+                    if (s?.InternalDeviceId == internalDeviceId)
                     {
-                        // Use the actual Emby Session ID, not the device ID
+                        // Use the actual Emby Session ID
                         sessionId = s.Id;
                         break;
                     }
@@ -115,7 +116,7 @@ namespace EmbyPluginSyncWatch.Api
             }
             catch
             {
-                // If session enumeration fails, just use device ID
+                // If session enumeration fails, just use internal device ID as string
             }
             
             return (sessionId, authUserId);
